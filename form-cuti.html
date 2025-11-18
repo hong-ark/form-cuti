@@ -1,146 +1,309 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>INPUT NIK SEBELUM REQUEST</title>
   <style>
+    :root {
+      --bg1: #2193b0;
+      --bg2: #6dd5ed;
+      --card: #ffffff;
+      --accent: #28a745;
+      --danger: #d9534f;
+      --muted: #6b7280;
+    }
+    * { box-sizing: border-box; }
     body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #2193b0, #6dd5ed);
+      font-family: "Inter", Arial, sans-serif;
       margin: 0;
-      padding: 0;
+      min-height: 100vh;
       display: flex;
-      justify-content: center;
       align-items: center;
-      height: 100vh;
+      justify-content: center;
+      background: linear-gradient(135deg,var(--bg1),var(--bg2));
+      padding: 24px;
     }
     .container {
-      background: #fff;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 8px 18px rgba(0,0,0,0.15);
       width: 100%;
-      max-width: 420px;
-      text-align: center;
+      max-width: 480px;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 28px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.12);
     }
-    h2 {
-      background: linear-gradient(90deg, #2193b0, #6dd5ed);
+    h1 {
+      margin: 0 0 16px 0;
+      font-size: 18px;
+      text-align: center;
+      background: linear-gradient(90deg,var(--bg1),var(--bg2));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      font-weight: bold;
-      margin-bottom: 20px;
+      font-weight: 700;
     }
     label {
       display: block;
-      margin-top: 15px;
-      font-weight: bold;
+      font-size: 13px;
+      margin-top: 12px;
       color: #333;
-      text-align: left;
     }
-    input {
+    input[type="text"], input[type="password"] {
       width: 100%;
-      padding: 12px;
+      padding: 10px 12px;
       margin-top: 8px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
       font-size: 14px;
     }
-    button {
-      margin-top: 20px;
-      padding: 12px 18px;
+    .row {
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .btn {
+      display: inline-block;
+      width:100%;
+      padding: 11px 14px;
+      margin-top: 16px;
+      border-radius: 10px;
       border: none;
-      border-radius: 8px;
-      background: #2193b0;
-      color: #fff;
-      font-weight: bold;
       cursor: pointer;
-      transition: background 0.3s;
-      width: 100%;
+      font-weight: 700;
+      font-size: 14px;
     }
-    button:hover {
-      background: #176d7a;
-    }
-    #hasil {
-      margin-top: 20px;
-      font-weight: bold;
-      color: #444;
-    }
-    #formCutiBtn {
-      display: none;
-      background: #28a745;
-    }
-    #formCutiBtn:hover {
-      background: #1e7e34;
-    }
+    .btn-primary { background: var(--bg1); color: white; }
+    .btn-success { background: var(--accent); color: white; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .btn-danger { background: var(--danger); color: white; }
+    #hasil { margin-top: 14px; font-weight: 600; color: #374151; min-height: 24px; }
+    .small { font-size: 13px; color: var(--muted); margin-top:8px; }
+    .hidden { display: none; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .flex-between { display:flex; justify-content:space-between; align-items:center; gap:8px; }
   </style>
 </head>
 <body>
+  <div class="container" role="main" aria-labelledby="judul">
+    <h1 id="judul">INPUT NIK SEBELUM REQUEST</h1>
 
-  <div class="container">
-    <h2>INPUT NIK SEBELUM REQUEST</h2>
+    <label for="nik">Masukkan NIK</label>
+    <input id="nik" type="text" inputmode="numeric" placeholder="Contoh: 2012022847" />
 
-    <label for="nik">Masukkan NIK:</label>
-    <input type="text" id="nik" placeholder="Contoh: 2012022847" />
+    <button id="cekBtn" class="btn btn-primary">Cek NIK</button>
 
-    <button onclick="cekNIK()">Cek Nama & Group</button>
+    <div id="hasil" aria-live="polite"></div>
 
-    <div id="hasil"></div>
+    <!-- Area untuk verifikasi password (jika kolom D ada) -->
+    <div id="verifArea" class="hidden">
+      <label for="password">Masukkan Password</label>
+      <input id="password" type="password" placeholder="Password Anda" />
+      <div class="flex-between" style="margin-top:8px">
+        <button id="verifBtn" class="btn btn-success" style="width:70%">Verifikasi</button>
+        <button id="resetPassBtn" class="btn btn-secondary" style="width:30%">Reset</button>
+      </div>
+      <div class="small">Jika lupa password, hubungi admin untuk reset.</div>
+    </div>
 
-    <button id="formCutiBtn" onclick="lanjutForm()">Lanjut ke Form REQUEST</button>
+    <!-- Area untuk membuat password baru (jika kolom D kosong) -->
+    <div id="createArea" class="hidden">
+      <label for="newPass">Buat Password Baru</label>
+      <input id="newPass" type="password" placeholder="Password baru" />
+      <label for="confirmPass" class="small muted">Konfirmasi Password</label>
+      <input id="confirmPass" type="password" placeholder="Ketik ulang password" />
+
+      <button id="createBtn" class="btn btn-success">Buat Password</button>
+      <div class="small muted">Password akan disimpan di kolom D pada database.</div>
+    </div>
+
+    <button id="formCutiBtn" class="btn btn-success hidden">Lanjut ke Form REQUEST</button>
   </div>
 
   <script>
-    async function cekNIK() {
-      const nik = document.getElementById("nik").value.trim();
-      const hasil = document.getElementById("hasil");
-      const btnForm = document.getElementById("formCutiBtn");
+    // Ganti dengan URL Web App Apps Script Anda (hasil deploy)
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbz2Vcne0S9qUcVGCNan2ChqwcPdcqKbHVh3RdnCdK5e-UktyDu-uxVO_5uGccRQtctU/exec";
 
+    const nikInput = document.getElementById("nik");
+    const cekBtn = document.getElementById("cekBtn");
+    const hasilDiv = document.getElementById("hasil");
+    const verifArea = document.getElementById("verifArea");
+    const createArea = document.getElementById("createArea");
+    const passwordInput = document.getElementById("password");
+    const verifBtn = document.getElementById("verifBtn");
+    const resetPassBtn = document.getElementById("resetPassBtn");
+    const newPassInput = document.getElementById("newPass");
+    const confirmPassInput = document.getElementById("confirmPass");
+    const createBtn = document.getElementById("createBtn");
+    const formCutiBtn = document.getElementById("formCutiBtn");
+
+    let currentData = null; // { nama, group, passwordPresent }
+
+    function show(el) { el.classList.remove("hidden"); }
+    function hide(el) { el.classList.add("hidden"); }
+
+    function setStatus(text, isError=false) {
+      hasilDiv.innerText = text;
+      hasilDiv.style.color = isError ? "#b91c1c" : "#064e3b";
+    }
+
+    cekBtn.addEventListener("click", async () => {
+      const nik = nikInput.value.trim();
       if (!nik) {
-        hasil.innerText = "⚠️ Silakan masukkan NIK.";
-        btnForm.style.display = "none";
+        setStatus("⚠️ Silakan masukkan NIK.", true);
         return;
       }
 
-      hasil.innerText = "🔄 Mencari data...";
-      btnForm.style.display = "none";
+      // reset UI
+      hide(verifArea);
+      hide(createArea);
+      hide(formCutiBtn);
+      currentData = null;
+      setStatus("🔄 Mencari data...");
 
       try {
-        // Ganti URL berikut dengan Apps Script milik Anda
-        const response = await fetch(
-          `https://script.google.com/macros/s/AKfycbz2Vcne0S9qUcVGCNan2ChqwcPdcqKbHVh3RdnCdK5e-UktyDu-uxVO_5uGccRQtctU/exec?nik=${nik}`
-        );
-        const data = await response.json();
+        const url = `${GAS_URL}?nik=${encodeURIComponent(nik)}`;
+        const resp = await fetch(url);
+        const data = await resp.json();
 
-        if (data.nama && data.group) {
-          hasil.innerHTML = `
-            ✅ Nama: <strong>${data.nama}</strong><br>
-            ✅ Group: <strong>${data.group}</strong>
-          `;
-          btnForm.style.display = "inline-block";
-          btnForm.dataset.nama = data.nama;
-          btnForm.dataset.nik = nik;
-          btnForm.dataset.group = data.group;
-        } else {
-          hasil.innerText = "❌ NIK tidak ditemukan di database.";
+        if (data.error) {
+          setStatus(data.error, true);
+          return;
         }
+
+        // simpan sementara
+        currentData = {
+          nama: data.nama || "",
+          group: data.group || "",
+          passwordPresent: !!data.passwordPresent
+        };
+
+        // show results
+        setStatus(`✅ Nama: ${currentData.nama} | Group: ${currentData.group}`);
+
+        if (currentData.passwordPresent) {
+          // ada password -> tampilkan verifikasi
+          show(verifArea);
+        } else {
+          // belum ada password -> tampilkan create password
+          show(createArea);
+        }
+
       } catch (err) {
-        hasil.innerText = "❌ Gagal mengambil data.";
         console.error(err);
+        setStatus("❌ Gagal mengambil data dari server.", true);
       }
-    }
+    });
 
-    function lanjutForm() {
-      const btn = document.getElementById("formCutiBtn");
-      const nama = encodeURIComponent(btn.dataset.nama);
-      const nik = encodeURIComponent(btn.dataset.nik);
-      const group = encodeURIComponent(btn.dataset.group);
+    // Verifikasi password yang sudah ada
+    verifBtn.addEventListener("click", async () => {
+      const nik = nikInput.value.trim();
+      const pwd = passwordInput.value;
+      if (!pwd) {
+        setStatus("⚠️ Masukkan password untuk verifikasi.", true);
+        return;
+      }
+      setStatus("🔐 Memverifikasi...");
 
-      // Redirect ke form-request.html dengan parameter query string
+      try {
+        const url = `${GAS_URL}?nik=${encodeURIComponent(nik)}&password=${encodeURIComponent(pwd)}`;
+        const resp = await fetch(url);
+        const data = await resp.json();
+
+        if (data.error) {
+          setStatus(data.error, true);
+          return;
+        }
+
+        // Berhasil verifikasi
+        setStatus(`✅ Verifikasi sukses. Selamat ${data.nama}`);
+        // Aktifkan tombol lanjut
+        formCutiBtn.dataset.nama = data.nama;
+        formCutiBtn.dataset.nik = nik;
+        formCutiBtn.dataset.group = data.group;
+        show(formCutiBtn);
+      } catch (err) {
+        console.error(err);
+        setStatus("❌ Gagal verifikasi.", true);
+      }
+    });
+
+    // Create new password (kolom D kosong)
+    createBtn.addEventListener("click", async () => {
+      const nik = nikInput.value.trim();
+      const pass1 = newPassInput.value;
+      const pass2 = confirmPassInput.value;
+      if (!pass1 || !pass2) {
+        setStatus("⚠️ Lengkapi password dan konfirmasi.", true);
+        return;
+      }
+      if (pass1 !== pass2) {
+        setStatus("⚠️ Password dan konfirmasi tidak cocok.", true);
+        return;
+      }
+      if (pass1.length < 4) {
+        setStatus("⚠️ Gunakan minimal 4 karakter untuk password.", true);
+        return;
+      }
+
+      setStatus("🔄 Menyimpan password baru...");
+
+      try {
+        const body = {
+          action: "setPassword",
+          nik: nik,
+          password: pass1
+        };
+
+        const resp = await fetch(GAS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        const data = await resp.json();
+
+        if (data.error) {
+          setStatus(data.error, true);
+          return;
+        }
+
+        setStatus(data.message || "✅ Password berhasil dibuat.");
+        // sekarang treat as verified: enable lanjut
+        formCutiBtn.dataset.nama = currentData?.nama || "";
+        formCutiBtn.dataset.nik = nik;
+        formCutiBtn.dataset.group = currentData?.group || "";
+        show(formCutiBtn);
+        hide(createArea);
+      } catch (err) {
+        console.error(err);
+        setStatus("❌ Gagal menyimpan password.", true);
+      }
+    });
+
+    // Reset: clear password fields & hide verif/create
+    resetPassBtn.addEventListener("click", () => {
+      passwordInput.value = "";
+      newPassInput.value = "";
+      confirmPassInput.value = "";
+      hide(verifArea);
+      hide(createArea);
+      hide(formCutiBtn);
+      setStatus("🔁 Silakan cek kembali NIK atau hubungi admin jika perlu reset.");
+    });
+
+    // Lanjut ke form-request.html
+    formCutiBtn.addEventListener("click", () => {
+      const nama = encodeURIComponent(formCutiBtn.dataset.nama || "");
+      const nik = encodeURIComponent(formCutiBtn.dataset.nik || "");
+      const group = encodeURIComponent(formCutiBtn.dataset.group || "");
       const formURL = "form-request.html";
       window.location.href = `${formURL}?nik=${nik}&nama=${nama}&group=${group}`;
-    }
-  </script>
+    });
 
+    // optional: respond to Enter key on NIK input
+    nikInput.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") {
+        cekBtn.click();
+      }
+    });
+  </script>
 </body>
 </html>
-

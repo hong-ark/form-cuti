@@ -1,301 +1,240 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>INPUT NIK SEBELUM REQUEST</title>
   <style>
-    :root{
-      --bg1:#2193b0; --bg2:#6dd5ed; --card:#fff; --muted:#6b7280;
-      --success:#16a34a; --danger:#ef4444;
-    }
+    :root{ --bg1:#2193b0; --bg2:#6dd5ed; --card:#fff; --muted:#6b7280; --ok:#16a34a; --err:#ef4444;}
     *{box-sizing:border-box}
-    body{
-      font-family:Inter, Arial, sans-serif;
-      margin:0;
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:linear-gradient(135deg,var(--bg1),var(--bg2));
-      padding:20px;
-    }
-    .container{
-      width:100%; max-width:560px;
-      background:var(--card);
-      border-radius:12px;
-      padding:26px;
-      box-shadow:0 14px 30px rgba(0,0,0,0.12);
-    }
-    h1{
-      margin:0 0 14px 0;
-      font-size:18px;
-      text-align:center;
-      background:linear-gradient(90deg,var(--bg1),var(--bg2));
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-      font-weight:700;
-    }
-    label{display:block; margin-top:12px; color:#222; font-weight:600;}
-    input[type="text"], input[type="password"]{
-      width:100%; padding:10px 12px; margin-top:8px;
-      border-radius:10px; border:1px solid #e5e7eb; font-size:14px;
-    }
-    .btn{
-      display:inline-block; width:100%; padding:12px 14px; margin-top:16px;
-      border-radius:10px; border:none; cursor:pointer; font-weight:700; font-size:14px;
-    }
-    .btn-primary{ background:var(--bg1); color:#fff; }
-    .btn-success{ background:var(--success); color:#fff; }
-    .btn-secondary{ background:#6c757d; color:#fff; }
-    .small{ font-size:13px; color:var(--muted); margin-top:8px; }
-    .hidden{ display:none; }
-    #hasil{ margin-top:14px; min-height:28px; font-weight:600; }
-    .flex{ display:flex; gap:8px; align-items:center; }
-    .flex .half{ flex:1; }
-    .status-error{ color:var(--danger); }
-    .status-ok{ color:var(--success); }
-    .card-section{ border:1px dashed #e6eef2; padding:12px; margin-top:12px; border-radius:8px; background:#fbfeff; }
-    .toggle-row{ display:flex; gap:8px; align-items:center; margin-top:6px; }
-    .toggle-row input[type="checkbox"]{ transform:scale(1.1); margin-right:6px; }
-    .muted { color: var(--muted); font-size:13px; }
+    body{font-family:Inter, Arial, sans-serif; margin:0; min-height:100vh;
+      display:flex; align-items:center; justify-content:center;
+      background:linear-gradient(135deg,var(--bg1),var(--bg2)); padding:20px;}
+    .card{width:100%; max-width:420px; background:var(--card); padding:22px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,.12);}
+    h1{margin:0 0 12px 0; text-align:center; font-size:18px; font-weight:700;
+      background:linear-gradient(90deg,var(--bg1),var(--bg2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent;}
+    label{display:block; margin-top:10px; color:#222; font-weight:600; font-size:13px;}
+    input[type="text"], input[type="password"]{width:100%; padding:10px 12px; margin-top:8px; border-radius:8px; border:1px solid #e5e7eb; font-size:14px;}
+    .btn{display:inline-block; width:100%; padding:11px 12px; margin-top:14px; border-radius:8px; border:none; cursor:pointer; font-weight:700;}
+    .btn-primary{background:var(--bg1); color:#fff;}
+    .btn-success{background:var(--ok); color:#fff;}
+    .link{display:inline-block; margin-top:10px; color:var(--bg1); cursor:pointer; text-decoration:underline;}
+    .small{font-size:13px; color:var(--muted); margin-top:8px;}
+    .status{min-height:24px; margin-top:12px; font-weight:600;}
+    .status.ok{color:var(--ok);} .status.err{color:var(--err);}
+    .hidden{display:none;}
+    .create-area{margin-top:12px; padding:10px; border-radius:8px; border:1px dashed #e6eef2; background:#fbfeff;}
+    .toggle{display:flex; align-items:center; gap:8px; margin-top:8px;}
   </style>
 </head>
 <body>
-  <div class="container" role="main" aria-labelledby="judul">
+  <div class="card" role="main" aria-labelledby="judul">
     <h1 id="judul">INPUT NIK SEBELUM REQUEST</h1>
 
     <label for="nik">Masukkan NIK</label>
     <input id="nik" type="text" inputmode="numeric" placeholder="Contoh: 2012022847" />
 
-    <button id="cekBtn" class="btn btn-primary">Cek NIK</button>
-
-    <div id="hasil" aria-live="polite"></div>
-
-    <!-- Dua area password aktif bersamaan -->
-    <div class="card-section" aria-labelledby="verifTitle">
-      <h3 id="verifTitle" style="margin:0; font-size:15px;">Verifikasi Password (untuk yang sudah punya)</h3>
-      <p class="muted" style="margin:6px 0 8px 0;">Jika Anda sudah memiliki password, masukkan di sini untuk verifikasi.</p>
-
-      <label for="password">Masukkan Password</label>
-      <input id="password" type="password" placeholder="Password Anda" />
-
-      <div class="toggle-row">
-        <label style="display:flex; align-items:center; gap:6px;">
-          <input id="showPwdVerif" type="checkbox" /> <span class="small">Tampilkan password</span>
-        </label>
-        <button id="verifBtn" class="btn half btn-success" style="width:auto; padding:8px 12px;">Verifikasi</button>
-        <button id="resetPassBtn" class="btn half btn-secondary" style="width:auto; padding:8px 12px;">Reset</button>
-      </div>
-
-      <div class="small">Jika verifikasi sukses, tombol <strong>Lanjut ke Form REQUEST</strong> akan muncul.</div>
+    <label for="password">Password</label>
+    <input id="password" type="password" placeholder="Masukkan password (jika ada)" />
+    <div class="toggle">
+      <label style="display:flex;align-items:center;gap:6px;"><input id="showPwd" type="checkbox"/> <span class="small">Tampilkan password</span></label>
     </div>
 
-    <div class="card-section" aria-labelledby="createTitle">
-      <h3 id="createTitle" style="margin:0; font-size:15px;">Buat Password Baru (untuk yang belum punya)</h3>
-      <p class="muted" style="margin:6px 0 8px 0;">Jika kolom D (password) di database kosong, buat password baru di bagian ini.</p>
+    <button id="cekBtn" class="btn btn-primary">Cek &amp; Login</button>
 
+    <div id="status" class="status" aria-live="polite"></div>
+
+    <!-- Teks untuk membuat password baru; muncul jika server menyatakan password tidak ada -->
+    <div id="createHint" class="small hidden">
+      Belum punya password? <span id="createLink" class="link">Buat password baru</span>
+    </div>
+
+    <!-- area pembuatan password (muncul ketika klik link) -->
+    <div id="createArea" class="create-area hidden" aria-hidden="true">
       <label for="newPass">Buat Password Baru</label>
-      <input id="newPass" type="password" placeholder="Password baru" />
-
-      <label for="confirmPass" class="small muted" style="margin-top:10px;">Konfirmasi Password</label>
+      <input id="newPass" type="password" placeholder="Password baru (min 4 karakter)" />
+      <label for="confirmPass" class="small" style="margin-top:8px;">Konfirmasi Password</label>
       <input id="confirmPass" type="password" placeholder="Ketik ulang password" />
-
-      <div class="toggle-row">
-        <label style="display:flex; align-items:center; gap:6px;">
-          <input id="showPwdCreate" type="checkbox" /> <span class="small">Tampilkan password</span>
-        </label>
-        <button id="createBtn" class="btn half btn-success" style="width:auto; padding:8px 12px;">Buat Password</button>
+      <div class="toggle">
+        <label style="display:flex;align-items:center;gap:6px;"><input id="showNewPwd" type="checkbox"/> <span class="small">Tampilkan password</span></label>
       </div>
-
-      <div class="small">Password akan disimpan di kolom D pada database (server).</div>
+      <button id="createBtn" class="btn btn-success">Buat Password</button>
+      <div class="small">Password akan disimpan di kolom D pada database.</div>
     </div>
-
-    <button id="formCutiBtn" class="btn btn-success hidden">Lanjut ke Form REQUEST</button>
   </div>
 
   <script>
-    // === GANTI DENGAN URL Web App ANDA (hasil deploy) ===
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzUeW__z56sedyh1G8FtgQTOTwYHXliSq3wmh1tAshWOBaLMmc9cpdwJ9Cg_5jILg06/exec";
+    // GANTI DENGAN URL WEB APP (Apps Script) ANDA
+    const GAS_URL = "https://script.google.com/macros/s/AKfycb.../exec";
 
-    // Element refs
-    const nikInput = document.getElementById("nik");
-    const cekBtn = document.getElementById("cekBtn");
-    const hasilDiv = document.getElementById("hasil");
+    const nikInput = document.getElementById('nik');
+    const pwdInput = document.getElementById('password');
+    const showPwd = document.getElementById('showPwd');
+    const cekBtn = document.getElementById('cekBtn');
+    const statusDiv = document.getElementById('status');
 
-    // Verif area
-    const passwordInput = document.getElementById("password");
-    const showPwdVerif = document.getElementById("showPwdVerif");
-    const verifBtn = document.getElementById("verifBtn");
-    const resetPassBtn = document.getElementById("resetPassBtn");
+    const createHint = document.getElementById('createHint');
+    const createLink = document.getElementById('createLink');
+    const createArea = document.getElementById('createArea');
+    const newPassInput = document.getElementById('newPass');
+    const confirmPassInput = document.getElementById('confirmPass');
+    const showNewPwd = document.getElementById('showNewPwd');
+    const createBtn = document.getElementById('createBtn');
 
-    // Create area
-    const newPassInput = document.getElementById("newPass");
-    const confirmPassInput = document.getElementById("confirmPass");
-    const showPwdCreate = document.getElementById("showPwdCreate");
-    const createBtn = document.getElementById("createBtn");
+    let lastCheckedNik = ""; // simpan nik terakhir yang dicek
+    let currentInfo = null; // { nama, group, passwordPresent }
 
-    const formCutiBtn = document.getElementById("formCutiBtn");
-
-    let currentData = null; // { nama, group, passwordPresent }
-
-    function setStatus(text, type) {
-      // type: "ok" | "error" | null
-      hasilDiv.textContent = text || "";
-      hasilDiv.className = type === "ok" ? "status-ok" : (type === "error" ? "status-error" : "");
+    function setStatus(text, type=null) {
+      statusDiv.textContent = text || "";
+      statusDiv.className = 'status' + (type ? ' ' + type : '');
     }
 
-    // Toggle show password handlers
-    showPwdVerif.addEventListener("change", () => {
-      passwordInput.type = showPwdVerif.checked ? "text" : "password";
+    showPwd.addEventListener('change', () => {
+      pwdInput.type = showPwd.checked ? 'text' : 'password';
     });
-    showPwdCreate.addEventListener("change", () => {
-      newPassInput.type = showPwdCreate.checked ? "text" : "password";
-      confirmPassInput.type = showPwdCreate.checked ? "text" : "password";
+    showNewPwd.addEventListener('change', () => {
+      newPassInput.type = showNewPwd.checked ? 'text' : 'password';
+      confirmPassInput.type = showNewPwd.checked ? 'text' : 'password';
     });
 
-    // ==== cek NIK (ambil nama/group/passwordPresent) ====
-    cekBtn.addEventListener("click", async () => {
+    // Cek & Login (verifikasi jika password diisi; atau hanya cek NIK jika password kosong)
+    cekBtn.addEventListener('click', async () => {
       const nik = nikInput.value.trim();
-      if (!nik) { setStatus("⚠️ Silakan masukkan NIK.", "error"); return; }
+      const password = pwdInput.value;
 
-      // reset
-      currentData = null;
-      setStatus("🔄 Mencari data...");
+      if (!nik) { setStatus('⚠️ Silakan masukkan NIK.', 'err'); return; }
+
+      setStatus('🔄 Memeriksa NIK...', null);
+      createHint.classList.add('hidden');
+      createArea.classList.add('hidden');
+      currentInfo = null;
+      lastCheckedNik = nik;
 
       try {
-        const url = `${GAS_URL}?nik=${encodeURIComponent(nik)}`;
+        // Jika user mengisi password -> gunakan parameter password untuk verifikasi
+        // Jika kosong -> hanya cek apakah password ada di DB
+        let url = `${GAS_URL}?nik=${encodeURIComponent(nik)}`;
+        if (password) url += `&password=${encodeURIComponent(password)}`;
+
         const resp = await fetch(url);
         if (!resp.ok) {
-          const txt = await resp.text();
-          setStatus("❌ Server error saat cek NIK: " + resp.status + " - " + txt, "error");
+          const t = await resp.text();
+          setStatus('❌ Server error: ' + resp.status + ' - ' + t, 'err');
           return;
         }
         const data = await resp.json();
-        if (data.error) { setStatus(data.error, "error"); return; }
 
-        currentData = {
-          nama: data.nama || "",
-          group: data.group || "",
-          passwordPresent: !!data.passwordPresent
-        };
+        if (data.error) {
+          // Jika error menyatakan "Belum membuat password..." dan user belum memasukkan password,
+          // tampilkan hint untuk membuat password baru
+          setStatus(data.error, 'err');
+          // jika server memberi info passwordPresent false in other route, we can still ask to create
+          // but typical response for ?nik only is { nama, group, passwordPresent }
+          // so continue
+          return;
+        }
 
-        setStatus(`✅ Nama: ${currentData.nama} | Group: ${currentData.group}`, "ok");
+        // Jika kita meminta verifikasi (password diisi) dan server memberi nama/group -> verifikasi sukses
+        if (password && data.nama && data.group) {
+          setStatus(`✅ Verifikasi sukses. Nama: ${data.nama} | Group: ${data.group}`, 'ok');
+          currentInfo = { nama: data.nama, group: data.group, passwordPresent: true };
+          // tombol lanjut bisa ditambahkan di sini jika perlu
+          createHint.classList.add('hidden');
+          return;
+        }
 
-        // UX hint: if password already present, recommend using verifikasi; if not, recommend create
-        if (currentData.passwordPresent) {
-          setStatus(`✅ Nama: ${currentData.nama} | Group: ${currentData.group} — Gunakan bagian "Verifikasi Password".`, "ok");
+        // Jika kita hanya cek nik (atau server mengembalikan passwordPresent)
+        if (data.nama && data.group !== undefined && data.passwordPresent !== undefined) {
+          currentInfo = { nama: data.nama, group: data.group, passwordPresent: !!data.passwordPresent };
+          setStatus(`✅ Nama: ${data.nama} | Group: ${data.group}`, 'ok');
+
+          if (!currentInfo.passwordPresent) {
+            // tampilkan hint untuk buat password
+            createHint.classList.remove('hidden');
+          } else {
+            createHint.classList.add('hidden');
+          }
+          return;
+        }
+
+        // fallback - tampilkan data jika ada
+        if (data.nama || data.group) {
+          setStatus((data.nama ? 'Nama: ' + data.nama + ' ' : '') + (data.group ? '| Group: ' + data.group : ''), 'ok');
         } else {
-          setStatus(`✅ Nama: ${currentData.nama} | Group: ${currentData.group} — Gunakan bagian "Buat Password Baru".`, "ok");
+          setStatus('❌ Respon server tidak sesuai.', 'err');
         }
 
       } catch (err) {
         console.error(err);
-        setStatus("❌ Gagal mengambil data dari server (cek koneksi atau URL).", "error");
+        setStatus('❌ Gagal menghubungi server. Cek URL & koneksi.', 'err');
       }
     });
 
-    // allow Enter to trigger cek
-    nikInput.addEventListener("keydown", (e) => { if (e.key === "Enter") cekBtn.click(); });
-
-    // ==== verifikasi password existing (GET with password) ====
-    verifBtn.addEventListener("click", async () => {
-      const nik = nikInput.value.trim();
-      const pwd = passwordInput.value;
-      if (!nik) { setStatus("⚠️ Masukkan NIK terlebih dahulu, lalu klik Cek NIK.", "error"); return; }
-      if (!pwd) { setStatus("⚠️ Masukkan password untuk verifikasi.", "error"); return; }
-
-      setStatus("🔐 Memverifikasi...");
-
-      try {
-        const url = `${GAS_URL}?nik=${encodeURIComponent(nik)}&password=${encodeURIComponent(pwd)}`;
-        const resp = await fetch(url);
-        if (!resp.ok) {
-          const txt = await resp.text();
-          setStatus("❌ Server error saat verifikasi: " + resp.status + " - " + txt, "error");
-          return;
-        }
-        const data = await resp.json();
-        if (data.error) { setStatus(data.error, "error"); return; }
-
-        setStatus(`✅ Verifikasi sukses. Selamat ${data.nama}`, "ok");
-        formCutiBtn.dataset.nama = data.nama || "";
-        formCutiBtn.dataset.nik = nik;
-        formCutiBtn.dataset.group = data.group || "";
-        formCutiBtn.classList.remove("hidden");
-
-      } catch (err) {
-        console.error(err);
-        setStatus("❌ Gagal verifikasi (cek koneksi).", "error");
+    // Tampilkan area pembuatan password jika user klik link
+    createLink.addEventListener('click', () => {
+      if (!lastCheckedNik) {
+        setStatus('⚠️ Silakan cek NIK terlebih dahulu.', 'err');
+        return;
       }
+      createArea.classList.toggle('hidden');
+      createArea.setAttribute('aria-hidden', createArea.classList.contains('hidden') ? 'true' : 'false');
     });
 
-    // reset button: clear password inputs and hide lanjut
-    resetPassBtn.addEventListener("click", () => {
-      passwordInput.value = "";
-      formCutiBtn.classList.add("hidden");
-      setStatus("🔁 Reset password input. Masukkan ulang jika perlu.");
-    });
+    // Buat password baru (POST form-urlencoded untuk menghindari preflight)
+    createBtn.addEventListener('click', async () => {
+      const nik = lastCheckedNik || nikInput.value.trim();
+      const p1 = newPassInput.value;
+      const p2 = confirmPassInput.value;
 
-    // ==== create new password (POST form-urlencoded) ====
-    createBtn.addEventListener("click", async () => {
-      const nik = nikInput.value.trim();
-      const pass1 = newPassInput.value;
-      const pass2 = confirmPassInput.value;
+      if (!nik) { setStatus('⚠️ Silakan masukkan NIK dan klik Cek NIK terlebih dahulu.', 'err'); return; }
+      if (!p1 || !p2) { setStatus('⚠️ Lengkapi password dan konfirmasi.', 'err'); return; }
+      if (p1 !== p2) { setStatus('⚠️ Password dan konfirmasi tidak cocok.', 'err'); return; }
+      if (p1.length < 4) { setStatus('⚠️ Gunakan minimal 4 karakter untuk password.', 'err'); return; }
 
-      if (!nik) { setStatus("⚠️ Masukkan NIK terlebih dahulu, lalu klik Cek NIK.", "error"); return; }
-      if (!pass1 || !pass2) { setStatus("⚠️ Lengkapi password dan konfirmasi.", "error"); return; }
-      if (pass1 !== pass2) { setStatus("⚠️ Password dan konfirmasi tidak cocok.", "error"); return; }
-      if (pass1.length < 4) { setStatus("⚠️ Gunakan minimal 4 karakter untuk password.", "error"); return; }
-
-      setStatus("🔄 Menyimpan password baru...");
       createBtn.disabled = true;
-      createBtn.textContent = "Menyimpan...";
+      createBtn.textContent = 'Menyimpan...';
+      setStatus('🔄 Menyimpan password baru...', null);
 
       try {
         const form = new URLSearchParams();
-        form.append("action", "setPassword");
-        form.append("nik", nik);
-        form.append("password", pass1);
+        form.append('action', 'setPassword');
+        form.append('nik', nik);
+        form.append('password', p1);
 
         const resp = await fetch(GAS_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
           body: form.toString()
         });
 
         if (!resp.ok) {
-          const txt = await resp.text();
-          setStatus("❌ Server error saat menyimpan: " + resp.status + " - " + txt, "error");
+          const t = await resp.text();
+          setStatus('❌ Server error saat menyimpan: ' + resp.status + ' - ' + t, 'err');
           return;
         }
-
         const data = await resp.json();
-        if (data.error) { setStatus(data.error, "error"); return; }
+        if (data.error) { setStatus(data.error, 'err'); return; }
 
-        setStatus(data.message || "✅ Password berhasil dibuat.", "ok");
-        // treat as verified after create
-        formCutiBtn.dataset.nama = currentData?.nama || "";
-        formCutiBtn.dataset.nik = nik;
-        formCutiBtn.dataset.group = currentData?.group || "";
-        formCutiBtn.classList.remove("hidden");
+        setStatus(data.message || '✅ Password berhasil dibuat.', 'ok');
+        // setelah sukses, sembunyikan hint & create area
+        createArea.classList.add('hidden');
+        createHint.classList.add('hidden');
+        // treat as password present now
+        currentInfo = currentInfo || {};
+        currentInfo.passwordPresent = true;
 
       } catch (err) {
         console.error(err);
-        setStatus("❌ Gagal menyimpan password (cek koneksi atau izin Web App).", "error");
+        setStatus('❌ Gagal menyimpan password (cek koneksi atau izin Web App).', 'err');
       } finally {
         createBtn.disabled = false;
-        createBtn.textContent = "Buat Password";
+        createBtn.textContent = 'Buat Password';
       }
     });
 
-    // lanjut ke form-request.html
-    formCutiBtn.addEventListener("click", () => {
-      const nama = encodeURIComponent(formCutiBtn.dataset.nama || "");
-      const nik = encodeURIComponent(formCutiBtn.dataset.nik || "");
-      const group = encodeURIComponent(formCutiBtn.dataset.group || "");
-      const formURL = "form-request.html";
-      window.location.href = `${formURL}?nik=${nik}&nama=${nama}&group=${group}`;
-    });
+    // optional: tekan Enter pada field password akan trigger cek
+    pwdInput.addEventListener('keydown', e => { if (e.key === 'Enter') cekBtn.click(); });
+    nikInput.addEventListener('keydown', e => { if (e.key === 'Enter') cekBtn.click(); });
   </script>
 </body>
 </html>

@@ -27,7 +27,6 @@
     .modal-backdrop{position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:1000;}
     .modal{width:100%; max-width:420px; background:#fff; border-radius:10px; padding:18px; box-shadow:0 10px 30px rgba(0,0,0,.2);}
     .modal h3{margin:0 0 10px 0; font-size:16px;}
-    .row{display:flex; gap:8px; align-items:center;}
     .inline-btn{display:inline-block; padding:8px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:700;}
     .btn-cancel{background:#6b7280; color:#fff;}
     .btn-save{background:var(--ok); color:#fff;}
@@ -47,7 +46,7 @@
       <label style="display:flex;align-items:center;gap:6px;"><input id="showPwd" type="checkbox" /> <span class="small">Tampilkan password</span></label>
     </div>
 
-    <!-- Teks yang diminta: menampilkan informasi default dan link 'ubah' yang membuka modal -->
+    <!-- Informasi & link ubah (tidak membuka modal otomatis) -->
     <div class="small muted" style="margin-top:8px;">
       Password default <strong>123</strong>, klik <a id="changeLinkInline" class="link">ubah</a> jika ingin ubah password.
     </div>
@@ -56,15 +55,10 @@
 
     <div id="status" class="status" aria-live="polite"></div>
 
-    <div class="small muted" style="margin-top:8px;">Catatan: Password disimpan dalam sheet (plain text). Jika ingin saya tambahkan hashing, beri tahu saya.</div>
-
-    <!-- optional: link to uploaded screenshot file (local path) -->
-    <div class="small muted" style="margin-top:10px;">
-      Screenshot (local): <a href="/mnt/data/f8b08fa0-65c7-433b-9bd7-bfddc140f503.png" target="_blank">/mnt/data/f8b08fa0-65c7-433b-9bd7-bfddc140f503.png</a>
-    </div>
+    <div class="small muted" style="margin-top:8px;">Catatan: Password disimpan dalam sheet (plain text). Jika ingin hashing, kabari saya.</div>
   </div>
 
-  <!-- Modal: Ubah Password (dibuka dari link "ubah") -->
+  <!-- Modal: Ubah Password (TERSEMBUNYI pada load) -->
   <div id="modalBackdrop" class="modal-backdrop hidden" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <h3 id="modalTitle">Ubah Password</h3>
@@ -114,7 +108,7 @@
     const modalStatus = document.getElementById('modalStatus');
 
     let lastCheckedNik = "";
-    let currentInfo = null; // { nama, group, passwordPresent }
+    let currentInfo = null;
 
     function setStatus(text, type=null) {
       statusDiv.textContent = text || "";
@@ -123,143 +117,92 @@
     function show(el){ el.classList.remove('hidden'); el.setAttribute('aria-hidden','false'); }
     function hide(el){ el.classList.add('hidden'); el.setAttribute('aria-hidden','true'); }
 
+    // only toggle password visibility
     showPwd.addEventListener('change', () => {
       pwdInput.type = showPwd.checked ? 'text' : 'password';
     });
 
-    // cek & login (or just check)
+    // -------------- Cek NIK (no modal calls here) --------------
     cekBtn.addEventListener('click', async () => {
       const nik = nikInput.value.trim();
       const password = pwdInput.value;
-
       if (!nik) { setStatus('⚠️ Silakan masukkan NIK.', 'err'); return; }
       setStatus('🔄 Memeriksa NIK...', null);
-      currentInfo = null;
       lastCheckedNik = nik;
+      currentInfo = null;
 
       try {
         let url = `${GAS_URL}?nik=${encodeURIComponent(nik)}`;
         if (password) url += `&password=${encodeURIComponent(password)}`;
-
         const resp = await fetch(url);
-        if (!resp.ok) {
-          const t = await resp.text();
-          setStatus('❌ Server error: ' + resp.status + ' - ' + t, 'err');
-          return;
-        }
+        if (!resp.ok) { setStatus('❌ Server error: ' + resp.status, 'err'); return; }
         const data = await resp.json();
-        if (data.error) {
-          setStatus(data.error, 'err');
-          return;
-        }
+        if (data.error) { setStatus(data.error, 'err'); return; }
 
         if (password && data.nama && data.group) {
           setStatus(`✅ Verifikasi sukses. Nama: ${data.nama} | Group: ${data.group}`, 'ok');
           currentInfo = { nama: data.nama, group: data.group, passwordPresent: true };
           return;
         }
-
         if (data.nama && data.group !== undefined && data.passwordPresent !== undefined) {
           currentInfo = { nama: data.nama, group: data.group, passwordPresent: !!data.passwordPresent };
           setStatus(`✅ Nama: ${data.nama} | Group: ${data.group}`, 'ok');
           return;
         }
-
-        if (data.nama || data.group) {
-          setStatus((data.nama ? 'Nama: ' + data.nama + ' ' : '') + (data.group ? '| Group: ' + data.group : ''), 'ok');
-        } else {
-          setStatus('❌ Respon server tidak sesuai.', 'err');
-        }
+        setStatus('❌ Respon server tidak sesuai.', 'err');
       } catch (err) {
         console.error(err);
         setStatus('❌ Gagal menghubungi server. Cek URL & koneksi.', 'err');
       }
     });
 
-    // open modal when user clicks "ubah"
+    // -------------- Modal open only on click (no auto show) --------------
     changeLinkInline.addEventListener('click', () => {
       if (!lastCheckedNik) { setStatus('⚠️ Silakan cek NIK terlebih dahulu.', 'err'); return; }
-      show(modalBackdrop);
       modalStatus.textContent = '';
       oldPwd.value = ''; newPwd.value = ''; confirmNewPwd.value = '';
+      show(modalBackdrop);
     });
 
-    // modal show/hide toggle for password fields
+    // modal controls
     showModalPwds.addEventListener('change', () => {
       const t = showModalPwds.checked ? 'text' : 'password';
       oldPwd.type = t; newPwd.type = t; confirmNewPwd.type = t;
     });
+    modalCancel.addEventListener('click', () => hide(modalBackdrop));
+    modalBackdrop.addEventListener('click', (ev) => { if (ev.target === modalBackdrop) hide(modalBackdrop); });
 
-    modalCancel.addEventListener('click', () => {
-      hide(modalBackdrop);
-    });
-
-    // submit change password
+    // submit change password (same changePassword POST as before)
     modalSave.addEventListener('click', async () => {
       const nik = lastCheckedNik || nikInput.value.trim();
       const oldP = oldPwd.value;
       const newP = newPwd.value;
       const conf = confirmNewPwd.value;
-
-      if (!nik) { modalStatus.textContent = '⚠️ Silakan cek NIK terlebih dahulu.'; modalStatus.style.color = 'var(--err)'; return; }
-      if (!oldP || !newP || !conf) { modalStatus.textContent = '⚠️ Lengkapi semua field.'; modalStatus.style.color = 'var(--err)'; return; }
-      if (newP !== conf) { modalStatus.textContent = '⚠️ Konfirmasi password tidak cocok.'; modalStatus.style.color = 'var(--err)'; return; }
-      if (newP.length < 4) { modalStatus.textContent = '⚠️ Gunakan minimal 4 karakter untuk password.'; modalStatus.style.color = 'var(--err)'; return; }
-
-      modalSave.disabled = true;
-      modalSave.textContent = 'Menyimpan...';
-      modalStatus.textContent = '🔄 Mengirim permintaan ubah password...';
-      modalStatus.style.color = 'black';
+      if (!nik) { modalStatus.textContent = '⚠️ Silakan cek NIK terlebih dahulu.'; modalStatus.style.color='var(--err)'; return; }
+      if (!oldP || !newP || !conf) { modalStatus.textContent='⚠️ Lengkapi semua field.'; modalStatus.style.color='var(--err)'; return; }
+      if (newP !== conf) { modalStatus.textContent='⚠️ Konfirmasi password tidak cocok.'; modalStatus.style.color='var(--err)'; return; }
+      if (newP.length < 4) { modalStatus.textContent='⚠️ Gunakan minimal 4 karakter untuk password.'; modalStatus.style.color='var(--err)'; return; }
+      modalSave.disabled = true; modalSave.textContent = 'Menyimpan...'; modalStatus.textContent='🔄 Mengirim...'; modalStatus.style.color='black';
 
       try {
         const form = new URLSearchParams();
-        form.append('action', 'changePassword');
+        form.append('action','changePassword');
         form.append('nik', nik);
         form.append('oldPassword', oldP);
         form.append('newPassword', newP);
-
-        const resp = await fetch(GAS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-          body: form.toString()
-        });
-
-        if (!resp.ok) {
-          const t = await resp.text();
-          modalStatus.textContent = '❌ Server error: ' + resp.status + ' - ' + t;
-          modalStatus.style.color = 'var(--err)';
-          return;
-        }
-
+        const resp = await fetch(GAS_URL, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'}, body: form.toString() });
+        if (!resp.ok) { modalStatus.textContent = '❌ Server error: ' + resp.status; modalStatus.style.color='var(--err)'; return; }
         const data = await resp.json();
-        if (data.error) {
-          modalStatus.textContent = data.error;
-          modalStatus.style.color = 'var(--err)';
-          return;
-        }
-
-        modalStatus.textContent = data.message || '✅ Password berhasil diubah.';
-        modalStatus.style.color = 'var(--ok)';
-        setTimeout(() => { hide(modalBackdrop); }, 900);
-
+        if (data.error) { modalStatus.textContent = data.error; modalStatus.style.color='var(--err)'; return; }
+        modalStatus.textContent = data.message || '✅ Password berhasil diubah.'; modalStatus.style.color='var(--ok)';
+        setTimeout(()=> hide(modalBackdrop), 900);
       } catch (err) {
         console.error(err);
-        modalStatus.textContent = '❌ Gagal menghubungi server.';
-        modalStatus.style.color = 'var(--err)';
+        modalStatus.textContent = '❌ Gagal menghubungi server.'; modalStatus.style.color='var(--err)';
       } finally {
-        modalSave.disabled = false;
-        modalSave.textContent = 'Simpan Perubahan';
+        modalSave.disabled = false; modalSave.textContent = 'Simpan Perubahan';
       }
     });
-
-    // close modal on backdrop click (but not inside modal)
-    modalBackdrop.addEventListener('click', (ev) => {
-      if (ev.target === modalBackdrop) hide(modalBackdrop);
-    });
-
-    // allow Enter to trigger cek
-    pwdInput.addEventListener('keydown', e => { if (e.key === 'Enter') cekBtn.click(); });
-    nikInput.addEventListener('keydown', e => { if (e.key === 'Enter') cekBtn.click(); });
   </script>
 </body>
 </html>

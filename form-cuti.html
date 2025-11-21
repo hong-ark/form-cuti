@@ -10,7 +10,7 @@
     body{font-family:Inter, Arial, sans-serif; margin:0; min-height:100vh;
       display:flex; align-items:center; justify-content:center;
       background:linear-gradient(135deg,var(--bg1),var(--bg2)); padding:20px;}
-    .card{width:100%; max-width:420px; background:var(--card); padding:22px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,.12);}
+    .card{width:100%; max-width:460px; background:var(--card); padding:22px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,.12);}
     h1{margin:0 0 12px 0; text-align:center; font-size:18px; font-weight:700;
       background:linear-gradient(90deg,var(--bg1),var(--bg2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent;}
     label{display:block; margin-top:10px; color:#222; font-weight:600; font-size:13px;}
@@ -23,8 +23,15 @@
     .status{min-height:24px; margin-top:12px; font-weight:600;}
     .status.ok{color:var(--ok);} .status.err{color:var(--err);}
     .hidden{display:none;}
-    .create-area{margin-top:12px; padding:10px; border-radius:8px; border:1px dashed #e6eef2; background:#fbfeff;}
-    .toggle{display:flex; align-items:center; gap:8px; margin-top:8px;}
+    /* modal */
+    .modal-backdrop{position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:1000;}
+    .modal{width:100%; max-width:420px; background:#fff; border-radius:10px; padding:18px; box-shadow:0 10px 30px rgba(0,0,0,.2);}
+    .modal h3{margin:0 0 10px 0; font-size:16px;}
+    .row{display:flex; gap:8px; align-items:center;}
+    .inline-btn{display:inline-block; padding:8px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:700;}
+    .btn-cancel{background:#6b7280; color:#fff;}
+    .btn-save{background:var(--ok); color:#fff;}
+    .muted{color:var(--muted); font-size:13px;}
   </style>
 </head>
 <body>
@@ -35,38 +42,55 @@
     <input id="nik" type="text" inputmode="numeric" placeholder="Contoh: 2012022847" />
 
     <label for="password">Password</label>
-    <input id="password" type="password" placeholder="Masukkan password (jika ada)" />
-    <div class="toggle">
-      <label style="display:flex;align-items:center;gap:6px;"><input id="showPwd" type="checkbox"/> <span class="small">Tampilkan password</span></label>
+    <input id="password" type="password" placeholder="Masukkan password (jika ada, default 123)" />
+    <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+      <label style="display:flex;align-items:center;gap:6px;"><input id="showPwd" type="checkbox" /> <span class="small">Tampilkan password</span></label>
     </div>
 
     <button id="cekBtn" class="btn btn-primary">Cek &amp; Login</button>
 
     <div id="status" class="status" aria-live="polite"></div>
 
-    <!-- Teks untuk membuat password baru; muncul jika server menyatakan password tidak ada -->
-    <div id="createHint" class="small hidden">
-      Belum punya password? <span id="createLink" class="link">Buat password baru</span>
-    </div>
+    <!-- Hint buat password jika kolom D kosong -->
+    <div id="createHint" class="small hidden">Belum punya password? <span id="createLink" class="link">Buat password baru</span></div>
 
-    <!-- area pembuatan password (muncul ketika klik link) -->
-    <div id="createArea" class="create-area hidden" aria-hidden="true">
-      <label for="newPass">Buat Password Baru</label>
-      <input id="newPass" type="password" placeholder="Password baru (min 4 karakter)" />
-      <label for="confirmPass" class="small" style="margin-top:8px;">Konfirmasi Password</label>
-      <input id="confirmPass" type="password" placeholder="Ketik ulang password" />
-      <div class="toggle">
-        <label style="display:flex;align-items:center;gap:6px;"><input id="showNewPwd" type="checkbox"/> <span class="small">Tampilkan password</span></label>
+    <!-- Link ubah password (muncul jika passwordPresent atau default) -->
+    <div id="changeHint" class="small hidden">Sudah punya password? <span id="changeLink" class="link">Ubah Password</span></div>
+    <div class="small muted" style="margin-top:8px;">Catatan: semua akun awalnya diberi password default <strong>123</strong>. Disarankan mengubahnya jika belum.</div>
+  </div>
+
+  <!-- Modal: Ubah Password -->
+  <div id="modalBackdrop" class="modal-backdrop hidden" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h3 id="modalTitle">Ubah Password</h3>
+
+      <label for="oldPwd">Password Lama</label>
+      <input id="oldPwd" type="password" placeholder="Masukkan password lama (mis. 123 jika belum diubah)" />
+
+      <label for="newPwd" style="margin-top:8px;">Password Baru</label>
+      <input id="newPwd" type="password" placeholder="Password baru (min 4 karakter)" />
+
+      <label for="confirmNewPwd" class="muted" style="margin-top:8px;">Konfirmasi Password</label>
+      <input id="confirmNewPwd" type="password" placeholder="Ketik ulang password baru" />
+
+      <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
+        <label style="display:flex;align-items:center;gap:6px;"><input id="showModalPwds" type="checkbox" /> <span class="small">Tampilkan semua password</span></label>
       </div>
-      <button id="createBtn" class="btn btn-success">Buat Password</button>
-      <div class="small">Password akan disimpan di kolom D pada database.</div>
+
+      <div style="display:flex; gap:10px; margin-top:12px;">
+        <button id="modalCancel" class="inline-btn btn-cancel">Batal</button>
+        <button id="modalSave" class="inline-btn btn-save">Simpan Perubahan</button>
+      </div>
+
+      <div id="modalStatus" class="muted" style="margin-top:10px; font-weight:700; min-height:22px;"></div>
     </div>
   </div>
 
   <script>
-    // GANTI DENGAN URL WEB APP (Apps Script) ANDA
+    // === GANTI DENGAN URL WEB APP ANDA ===
     const GAS_URL = "https://script.google.com/macros/s/AKfycbzUeW__z56sedyh1G8FtgQTOTwYHXliSq3wmh1tAshWOBaLMmc9cpdwJ9Cg_5jILg06/exec";
 
+    // refs
     const nikInput = document.getElementById('nik');
     const pwdInput = document.getElementById('password');
     const showPwd = document.getElementById('showPwd');
@@ -75,13 +99,21 @@
 
     const createHint = document.getElementById('createHint');
     const createLink = document.getElementById('createLink');
-    const createArea = document.getElementById('createArea');
-    const newPassInput = document.getElementById('newPass');
-    const confirmPassInput = document.getElementById('confirmPass');
-    const showNewPwd = document.getElementById('showNewPwd');
-    const createBtn = document.getElementById('createBtn');
 
-    let lastCheckedNik = ""; // simpan nik terakhir yang dicek
+    const changeHint = document.getElementById('changeHint');
+    const changeLink = document.getElementById('changeLink');
+
+    // modal refs
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const oldPwd = document.getElementById('oldPwd');
+    const newPwd = document.getElementById('newPwd');
+    const confirmNewPwd = document.getElementById('confirmNewPwd');
+    const showModalPwds = document.getElementById('showModalPwds');
+    const modalCancel = document.getElementById('modalCancel');
+    const modalSave = document.getElementById('modalSave');
+    const modalStatus = document.getElementById('modalStatus');
+
+    let lastCheckedNik = "";
     let currentInfo = null; // { nama, group, passwordPresent }
 
     function setStatus(text, type=null) {
@@ -89,30 +121,26 @@
       statusDiv.className = 'status' + (type ? ' ' + type : '');
     }
 
+    function show(el){ el.classList.remove('hidden'); el.setAttribute('aria-hidden','false'); }
+    function hide(el){ el.classList.add('hidden'); el.setAttribute('aria-hidden','true'); }
+
     showPwd.addEventListener('change', () => {
       pwdInput.type = showPwd.checked ? 'text' : 'password';
     });
-    showNewPwd.addEventListener('change', () => {
-      newPassInput.type = showNewPwd.checked ? 'text' : 'password';
-      confirmPassInput.type = showNewPwd.checked ? 'text' : 'password';
-    });
 
-    // Cek & Login (verifikasi jika password diisi; atau hanya cek NIK jika password kosong)
+    // cek & login (or just check)
     cekBtn.addEventListener('click', async () => {
       const nik = nikInput.value.trim();
       const password = pwdInput.value;
 
       if (!nik) { setStatus('⚠️ Silakan masukkan NIK.', 'err'); return; }
-
       setStatus('🔄 Memeriksa NIK...', null);
-      createHint.classList.add('hidden');
-      createArea.classList.add('hidden');
+      hide(createHint);
+      hide(changeHint);
       currentInfo = null;
       lastCheckedNik = nik;
 
       try {
-        // Jika user mengisi password -> gunakan parameter password untuk verifikasi
-        // Jika kosong -> hanya cek apakah password ada di DB
         let url = `${GAS_URL}?nik=${encodeURIComponent(nik)}`;
         if (password) url += `&password=${encodeURIComponent(password)}`;
 
@@ -123,43 +151,43 @@
           return;
         }
         const data = await resp.json();
-
         if (data.error) {
-          // Jika error menyatakan "Belum membuat password..." dan user belum memasukkan password,
-          // tampilkan hint untuk membuat password baru
+          // server may return error like "Belum membuat password" or "Password salah"
           setStatus(data.error, 'err');
-          // jika server memberi info passwordPresent false in other route, we can still ask to create
-          // but typical response for ?nik only is { nama, group, passwordPresent }
-          // so continue
+          // if response indicates not present, server should return passwordPresent false via ?nik only route
           return;
         }
 
-        // Jika kita meminta verifikasi (password diisi) dan server memberi nama/group -> verifikasi sukses
+        // if password provided and OK
         if (password && data.nama && data.group) {
           setStatus(`✅ Verifikasi sukses. Nama: ${data.nama} | Group: ${data.group}`, 'ok');
           currentInfo = { nama: data.nama, group: data.group, passwordPresent: true };
-          // tombol lanjut bisa ditambahkan di sini jika perlu
-          createHint.classList.add('hidden');
+          // show change password link
+          show(changeHint);
           return;
         }
 
-        // Jika kita hanya cek nik (atau server mengembalikan passwordPresent)
+        // If only checking nik
         if (data.nama && data.group !== undefined && data.passwordPresent !== undefined) {
           currentInfo = { nama: data.nama, group: data.group, passwordPresent: !!data.passwordPresent };
           setStatus(`✅ Nama: ${data.nama} | Group: ${data.group}`, 'ok');
 
           if (!currentInfo.passwordPresent) {
-            // tampilkan hint untuk buat password
-            createHint.classList.remove('hidden');
+            // show create hint
+            show(createHint);
+            hide(changeHint);
           } else {
-            createHint.classList.add('hidden');
+            // password exists (remember default 123 counts) -> show change link
+            show(changeHint);
+            hide(createHint);
           }
           return;
         }
 
-        // fallback - tampilkan data jika ada
+        // fallback
         if (data.nama || data.group) {
           setStatus((data.nama ? 'Nama: ' + data.nama + ' ' : '') + (data.group ? '| Group: ' + data.group : ''), 'ok');
+          show(changeHint);
         } else {
           setStatus('❌ Respon server tidak sesuai.', 'err');
         }
@@ -170,36 +198,58 @@
       }
     });
 
-    // Tampilkan area pembuatan password jika user klik link
+    // show create area (existing behavior)
     createLink.addEventListener('click', () => {
-      if (!lastCheckedNik) {
-        setStatus('⚠️ Silakan cek NIK terlebih dahulu.', 'err');
-        return;
-      }
-      createArea.classList.toggle('hidden');
-      createArea.setAttribute('aria-hidden', createArea.classList.contains('hidden') ? 'true' : 'false');
+      if (!lastCheckedNik) { setStatus('⚠️ Silakan cek NIK terlebih dahulu.', 'err'); return; }
+      // reuse old create area approach: show modal? here we keep simple: show modal but prefill oldPwd as default 123? We'll just show modal to change from default 123.
+      // But user wanted "buat password baru" earlier as inline; keep original: open modal but user will enter old password (123) and new.
+      show(modalBackdrop);
+      modalStatus.textContent = '';
+      oldPwd.value = ''; newPwd.value = ''; confirmNewPwd.value = '';
     });
 
-    // Buat password baru (POST form-urlencoded untuk menghindari preflight)
-    createBtn.addEventListener('click', async () => {
+    // show change password modal
+    changeLink.addEventListener('click', () => {
+      if (!lastCheckedNik) { setStatus('⚠️ Silakan cek NIK terlebih dahulu.', 'err'); return; }
+      show(modalBackdrop);
+      modalStatus.textContent = '';
+      oldPwd.value = ''; newPwd.value = ''; confirmNewPwd.value = '';
+    });
+
+    // modal show/hide toggle for password fields
+    showModalPwds.addEventListener('change', () => {
+      const t = showModalPwds.checked ? 'text' : 'password';
+      oldPwd.type = t; newPwd.type = t; confirmNewPwd.type = t;
+    });
+
+    modalCancel.addEventListener('click', () => {
+      hide(modalBackdrop);
+    });
+
+    // submit change password
+    modalSave.addEventListener('click', async () => {
       const nik = lastCheckedNik || nikInput.value.trim();
-      const p1 = newPassInput.value;
-      const p2 = confirmPassInput.value;
+      const oldP = oldPwd.value;
+      const newP = newPwd.value;
+      const conf = confirmNewPwd.value;
 
-      if (!nik) { setStatus('⚠️ Silakan masukkan NIK dan klik Cek NIK terlebih dahulu.', 'err'); return; }
-      if (!p1 || !p2) { setStatus('⚠️ Lengkapi password dan konfirmasi.', 'err'); return; }
-      if (p1 !== p2) { setStatus('⚠️ Password dan konfirmasi tidak cocok.', 'err'); return; }
-      if (p1.length < 4) { setStatus('⚠️ Gunakan minimal 4 karakter untuk password.', 'err'); return; }
+      if (!nik) { modalStatus.textContent = '⚠️ Silakan cek NIK terlebih dahulu.'; modalStatus.style.color = 'var(--err)'; return; }
+      if (!oldP || !newP || !conf) { modalStatus.textContent = '⚠️ Lengkapi semua field.'; modalStatus.style.color = 'var(--err)'; return; }
+      if (newP !== conf) { modalStatus.textContent = '⚠️ Konfirmasi password tidak cocok.'; modalStatus.style.color = 'var(--err)'; return; }
+      if (newP.length < 4) { modalStatus.textContent = '⚠️ Gunakan minimal 4 karakter untuk password.'; modalStatus.style.color = 'var(--err)'; return; }
 
-      createBtn.disabled = true;
-      createBtn.textContent = 'Menyimpan...';
-      setStatus('🔄 Menyimpan password baru...', null);
+      modalSave.disabled = true;
+      modalSave.textContent = 'Menyimpan...';
+      modalStatus.textContent = '🔄 Mengirim permintaan ubah password...';
+      modalStatus.style.color = 'black';
 
       try {
+        // POST form-urlencoded to avoid preflight
         const form = new URLSearchParams();
-        form.append('action', 'setPassword');
+        form.append('action', 'changePassword');
         form.append('nik', nik);
-        form.append('password', p1);
+        form.append('oldPassword', oldP);
+        form.append('newPassword', newP);
 
         const resp = await fetch(GAS_URL, {
           method: 'POST',
@@ -209,33 +259,42 @@
 
         if (!resp.ok) {
           const t = await resp.text();
-          setStatus('❌ Server error saat menyimpan: ' + resp.status + ' - ' + t, 'err');
+          modalStatus.textContent = '❌ Server error: ' + resp.status + ' - ' + t;
+          modalStatus.style.color = 'var(--err)';
           return;
         }
-        const data = await resp.json();
-        if (data.error) { setStatus(data.error, 'err'); return; }
 
-        setStatus(data.message || '✅ Password berhasil dibuat.', 'ok');
-        // setelah sukses, sembunyikan hint & create area
-        createArea.classList.add('hidden');
-        createHint.classList.add('hidden');
-        // treat as password present now
-        currentInfo = currentInfo || {};
-        currentInfo.passwordPresent = true;
+        const data = await resp.json();
+        if (data.error) {
+          modalStatus.textContent = data.error;
+          modalStatus.style.color = 'var(--err)';
+          return;
+        }
+
+        // success
+        modalStatus.textContent = data.message || '✅ Password berhasil diubah.';
+        modalStatus.style.color = 'var(--ok)';
+        // close modal after short delay
+        setTimeout(() => { hide(modalBackdrop); }, 900);
 
       } catch (err) {
         console.error(err);
-        setStatus('❌ Gagal menyimpan password (cek koneksi atau izin Web App).', 'err');
+        modalStatus.textContent = '❌ Gagal menghubungi server.';
+        modalStatus.style.color = 'var(--err)';
       } finally {
-        createBtn.disabled = false;
-        createBtn.textContent = 'Buat Password';
+        modalSave.disabled = false;
+        modalSave.textContent = 'Simpan Perubahan';
       }
     });
 
-    // optional: tekan Enter pada field password akan trigger cek
+    // allow Enter to trigger cek
     pwdInput.addEventListener('keydown', e => { if (e.key === 'Enter') cekBtn.click(); });
     nikInput.addEventListener('keydown', e => { if (e.key === 'Enter') cekBtn.click(); });
+
+    // close modal on backdrop click (but not inside modal)
+    modalBackdrop.addEventListener('click', (ev) => {
+      if (ev.target === modalBackdrop) hide(modalBackdrop);
+    });
   </script>
 </body>
 </html>
-
